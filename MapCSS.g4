@@ -47,8 +47,6 @@ fragment UNICODE: '\u0080'..'\uFFFF';
 
 COMMA: ',';
 QUESTION_MARK: '?';
-/*OP_DESC: '<';
-OP_ASC: '>';*/
 OP_INCLUDED_IN: '∈';
 OP_INTERSECTS: '⧉';
 PAR_OPEN: '(';
@@ -83,8 +81,6 @@ EVAL: ('e' | 'E') ('v' | 'V') ('a' | 'A') ('l' | 'L');
 IMPORT: '@' ('i' | 'I') ('m' | 'M') ('p' | 'P') ('o' | 'O')('r' | 'R') ('t' | 'T');
 
 
-/*fragment HWS: (' ' | '\t' | '\f');*/
-
 fragment DIGIT:  '0'..'9';
 fragment CHAR: 'a'..'z' | 'A'..'Z';
 
@@ -105,6 +101,7 @@ RBRACE: '}';
 COLON: ':';
 SEMICOLON: ';';
 
+
 /* -------------------- quoted strings -----------------------------------------------------------*/
 fragment EDQUOTE: '\\"';
 fragment ESQUOTE: '\\\'';
@@ -113,15 +110,9 @@ SQUOTED_STRING: '\'' (' '..'&' | '('..'[' | ']'..'~' | UNICODE | ESQUOTE | EBACK
 
 POSITIVE_INT: [0-9]+;
 NEGATIVE_INT: '-' POSITIVE_INT;
-/*INT: POSITIVE_INT | NEGATIVE_INT;*/
 
 POSITIVE_FLOAT: [0-9]+ | [0-9]* '.' [0-9]+;
 NEGATIVE_FLOAT: '-' POSITIVE_FLOAT;
-
-/*
-INCREMENT: NUMBER;
-PERCENTAGE: NUMBER;
-*/
 
 
 /* ----------------------------------------------------------------------------------------------- */
@@ -136,25 +127,13 @@ fragment REGEX_ESCAPE:   '\\\\' | '\\/' | '\\(' | '\\)'
 fragment REGEX_START:  ' '..')' | '+'..'.' |'0'..'[' | ']'..'~' | UNICODE | REGEX_ESCAPE;
 fragment REGEX_CHAR:  ' '..'.' |'0'..'[' | ']'..'~' | UNICODE | REGEX_ESCAPE;
 
-
-/*
- * make sure a / is  followed by a regular expression. If not, treat it
- * as DIV operator.
- */
-/*fragment DIV:;*/
-/*
-REGEXP:  '/'  (
-                    REGEX_START REGEX_CHAR* '/'  -> type(REGEXP)
-           | -> type(DIV)
-         );
-*/
-
 REGEXP: '/' REGEX_START REGEX_CHAR* '/';
+
 
 /* ----------------------------------------------------------------------------------------------- */
 /* Whitespace and comments                                                                         */
 /* ----------------------------------------------------------------------------------------------- */
-WS:		    (' ' | '\t' | '\n' | '\r' | '\f') -> channel(HIDDEN);
+WS:           (' ' | '\t' | '\n' | '\r' | '\f') -> channel(HIDDEN);
 SL_COMMENT:   '//' .*? '\r'? '\n' -> channel(HIDDEN);
 ML_COMMENT:   '/*'  .*? '*/' -> channel(HIDDEN);
 
@@ -164,203 +143,192 @@ ML_COMMENT:   '/*'  .*? '*/' -> channel(HIDDEN);
 /* ===============================================================================================  */
 
 stylesheet
-	: entry* EOF
-	;
+    : entry* EOF
+    ;
 
 entry
-	: rule_
-/*	| import_statement*/
-	;
+    : rule_
+/*    | import_statement*/
+    ;
 
 rule_
-    /*
-     * we allow an arbitray number of "empty" selectors seperated by ',' before a declaration block
-     */
-	: selector (COMMA selector)* COMMA* declaration_block
-	;
+    : selector (COMMA selector)* COMMA* declaration_block
+    ;
 
 selector
-	: simple_selector
-	| simple_selector simple_selector
-	| simple_selector OP_GT link_selector*  simple_selector
-	| simple_selector simple_selector_operator simple_selector
-	;
+    : simple_selector
+    | simple_selector simple_selector
+    | simple_selector OP_GT link_selector*  simple_selector
+    | simple_selector simple_selector_operator simple_selector
+    ;
 
 simple_selector_operator : OP_LT | OP_INCLUDED_IN | OP_INTERSECTS;
 
 link_selector
-	: LBRACKET ROLE binary_operator predicate_primitive RBRACKET
-	| LBRACKET INDEX op=int_operator v=int_ RBRACKET
-	;
+    : LBRACKET ROLE binary_operator predicate_primitive RBRACKET
+    | LBRACKET INDEX op=int_operator v=int_ RBRACKET
+    ;
 
 layer_id_selector
-	: COLON COLON k=cssident
-	;
+    : COLON COLON k=cssident
+    ;
 
-int_operator : OP_EQ | OP_NEQ | OP_LT| OP_LE| OP_GT| OP_GE;
+int_operator : OP_EQ | OP_NEQ | OP_LT | OP_LE | OP_GT | OP_GE;
 
 simple_selector
-	: type_selector (class_selector | attribute_selector | pseudo_class_selector)* layer_id_selector?
-	;
+    : type_selector (class_selector | attribute_selector | pseudo_class_selector)* layer_id_selector?
+    ;
 
 quoted
-	: v=DQUOTED_STRING
-	| v=SQUOTED_STRING
-	;
+    : DQUOTED_STRING
+    | SQUOTED_STRING
+    ;
 
 cssident
-	: '-' ?  NCOMPONENT
-	;
+    : '-' ?  NCOMPONENT
+    ;
 
 osmtag
-	: '-' ?   NCOMPONENT ((':'|'.') NCOMPONENT)*
-	;
+    : '-' ?  NCOMPONENT ((':'|'.') NCOMPONENT)*
+    ;
 
 attribute_selector
-	: LBRACKET  predicate RBRACKET
-	;
+    : LBRACKET predicate RBRACKET
+    ;
 
 predicate
-	: predicate_simple
-	| predicate_operator
-	| predicate_function
-	;
+    : predicate_simple
+    | predicate_operator
+    | predicate_function
+    ;
 
 predicate_simple
-	: predicate_ident  | OP_NOT predicate_ident  | predicate_ident QUESTION_MARK
-	| quoted           | OP_NOT quoted           |          quoted QUESTION_MARK
-	;
+    : predicate_ident  | OP_NOT predicate_ident  | predicate_ident QUESTION_MARK
+    | quoted           | OP_NOT quoted           |          quoted QUESTION_MARK
+    ;
 
 predicate_operator
-	: predicate_primitive binary_operator predicate_primitive
-	| predicate_primitive (OP_MATCH | OP_NOT_MATCH) rhs_match
-	;
+    : predicate_primitive binary_operator predicate_primitive
+    | predicate_primitive (OP_MATCH | OP_NOT_MATCH) rhs_match
+    ;
 
 predicate_function
-	: cssident PAR_OPEN (predicate_function_param (COMMA predicate_function_param)*)? PAR_CLOSE
-	;
+    : cssident PAR_OPEN (predicate_function_param (COMMA predicate_function_param)*)? PAR_CLOSE
+    ;
 
 predicate_function_param
-	: single_value
-	| predicate_function
-	;
+    : single_value
+    | predicate_function
+    ;
 
 predicate_ident
-	: osmtag
-	;
+    : osmtag
+    ;
 
 predicate_primitive
-	: single_value
-	| predicate_ident
-	| predicate_function
-	;
+    : single_value
+    | predicate_ident
+    | predicate_function
+    ;
 
 rhs_match
-	: quoted
-	| r=REGEXP
-	;
+    : quoted
+    | r=REGEXP
+    ;
 
 binary_operator
-	: OP_EQ | OP_NEQ | OP_LT | OP_GT | OP_LE
-	| OP_GE | OP_STARTS_WITH | OP_ENDS_WITH | OP_SUBSTRING
+    : OP_EQ | OP_NEQ | OP_LT | OP_GT | OP_LE
+    | OP_GE | OP_STARTS_WITH | OP_ENDS_WITH | OP_SUBSTRING
     | OP_CONTAINS
-	;
+    ;
 
 class_selector
-	: OP_NOT DOT cssident
-	| DOT cssident
-	;
+    : OP_NOT DOT cssident
+    | DOT cssident
+    ;
 
 pseudo_class_selector
     : COLON OP_NOT cssident
     | OP_NOT COLON cssident
-	| COLON cssident
-	;
+    | COLON cssident
+    ;
 
 type_selector
-    /*
-     * In the AST we allow any ident as type name
-     */
     : cssident
     | OP_MUL
-	;
+    ;
 
 declaration_block
-    /*
-     * we set the token text to '{' in order to keep track of line and
-     * column informatin.
-     */
-	:  l=LBRACE declarations RBRACE
-	|  l=LBRACE RBRACE
-	;
+    :  l=LBRACE declarations RBRACE
+    |  l=LBRACE RBRACE
+    ;
 
 declarations
-	: declaration (SEMICOLON declaration)* SEMICOLON*
-	;
+    : declaration (SEMICOLON declaration)* SEMICOLON*
+    ;
 
 declaration
-	: SET cssident
-	| declaration_property COLON declaration_value
-	;
+    : SET cssident
+    | declaration_property COLON declaration_value
+    ;
 
 declaration_property
-	: cssident
-	;
+    : cssident
+    ;
 
 declaration_value
-	: declaration_value_single
-/*	| EVAL  PAR_OPEN expr PAR_CLOSE*/
-	| declaration_value_function
-	;
+    : declaration_value_single
+/*    | EVAL  PAR_OPEN expr PAR_CLOSE*/
+    | declaration_value_function
+    ;
 
 declaration_value_single
-	: single_value
-	;
+    : single_value
+    ;
 
 declaration_value_function
-	: cssident PAR_OPEN (declaration_value (COMMA declaration_value)*)? PAR_CLOSE
-	;
+    : cssident PAR_OPEN (declaration_value (COMMA declaration_value)*)? PAR_CLOSE
+    ;
 
 int_
-	: n=POSITIVE_INT
-	| n=NEGATIVE_INT
-	;
+    : n=POSITIVE_INT
+    | n=NEGATIVE_INT
+    ;
 
 num
-	: n=POSITIVE_INT
-	| n=NEGATIVE_INT
-	| n=POSITIVE_FLOAT
-	| n=NEGATIVE_FLOAT
-	;
+    : n=POSITIVE_INT
+    | n=NEGATIVE_INT
+    | n=POSITIVE_FLOAT
+    | n=NEGATIVE_FLOAT
+    ;
 
 single_value
-	: v=POSITIVE_INT
-	| v=NEGATIVE_INT
-	| v=POSITIVE_FLOAT
-	| v=NEGATIVE_FLOAT
-	| quoted
-/*	| declaration_value_function*/
-
+    : v=POSITIVE_INT
+    | v=NEGATIVE_INT
+    | v=POSITIVE_FLOAT
+    | v=NEGATIVE_FLOAT
+    | quoted
+/*    | declaration_value_function*/
     /* make sure these are the last alternatives in this rule */
     | osmtag
-	;
+    ;
 
 /* ------------------------------------------------------------------------------------------ */
 /* eval expressions                                                                           */
 /* ------------------------------------------------------------------------------------------ */
 expr
-	: logicalExpression
-	;
+    : logicalExpression
+    ;
 
 args
-	: (expr (COMMA expr)*)?
-	;
+    : (expr (COMMA expr)*)?
+    ;
 
 logicalExpression
-    :    booleanAndExpression (
-             OP_OR logicalExpression
-           |
-         )
+    : booleanAndExpression (
+            OP_OR logicalExpression
+          |
+      )
     ;
 
 booleanAndExpression
@@ -370,52 +338,52 @@ booleanAndExpression
     ;
 
 equalityExpression
-    :    relationalExpression (
-             OP_EQ  relationalExpression
-           | OP_NEQ relationalExpression
-           |
-         )
+    : relationalExpression (
+            OP_EQ  relationalExpression
+          | OP_NEQ relationalExpression
+          |
+      )
     ;
 
 relationalExpression
-    :   additiveExpression (
+    : additiveExpression (
             OP_LT additiveExpression
           | OP_LE additiveExpression
           | OP_GT additiveExpression
           | OP_GE additiveExpression
           |
-        )
+      )
     ;
 
 additiveExpression
-    :    multiplicativeExpression (
-             OP_PLUS  additiveExpression
-           | OP_MINUS additiveExpression
-           |
-         )
+    : multiplicativeExpression (
+            OP_PLUS  additiveExpression
+          | OP_MINUS additiveExpression
+          |
+      )
     ;
 
 multiplicativeExpression
-    :  unaryExpression (
-         (OP_MUL multiplicativeExpression)
-       | (OP_DIV multiplicativeExpression)
-       | (OP_MOD multiplicativeExpression)
-       |
-    )
+    : unaryExpression (
+          (OP_MUL multiplicativeExpression)
+        | (OP_DIV multiplicativeExpression)
+        | (OP_MOD multiplicativeExpression)
+        |
+      )
     ;
 
 unaryExpression
-    :       OP_NOT primaryExpression
-         |  primaryExpression
+    : OP_NOT primaryExpression
+    | primaryExpression
     ;
 
 primaryExpression
-    :    PAR_OPEN expr PAR_CLOSE
-    |    f=cssident PAR_OPEN args PAR_CLOSE
-    |    v=POSITIVE_FLOAT
-    |    v=POSITIVE_INT
-    |    v=NEGATIVE_FLOAT
-    |    v=NEGATIVE_INT
-    |    quoted
-    |    osmtag
+    : PAR_OPEN expr PAR_CLOSE
+    | f=cssident PAR_OPEN args PAR_CLOSE
+    | v=POSITIVE_FLOAT
+    | v=POSITIVE_INT
+    | v=NEGATIVE_FLOAT
+    | v=NEGATIVE_INT
+    | quoted
+    | osmtag
     ;
