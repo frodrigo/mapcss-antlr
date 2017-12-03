@@ -99,24 +99,6 @@ class MapCSSListenerL(MapCSSListener):
             'index': ctx.int_() and ctx.int_().getText()})
 
 
-    # Enter a parse tree produced by MapCSSParser#layer_id_selector.
-    def enterLayer_id_selector(self, ctx:MapCSSParser.Layer_id_selectorContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#layer_id_selector.
-    def exitLayer_id_selector(self, ctx:MapCSSParser.Layer_id_selectorContext):
-        pass
-
-
-    # Enter a parse tree produced by MapCSSParser#int_operator.
-    def enterInt_operator(self, ctx:MapCSSParser.Int_operatorContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#int_operator.
-    def exitInt_operator(self, ctx:MapCSSParser.Int_operatorContext):
-        pass
-
-
     # Enter a parse tree produced by MapCSSParser#simple_selector.
     def enterSimple_selector(self, ctx:MapCSSParser.Simple_selectorContext):
         self.class_selectors = []
@@ -131,33 +113,6 @@ class MapCSSListenerL(MapCSSListener):
             'class_selectors': self.class_selectors,
             'predicates': self.predicates,
             'pseudo_class': self.pseudo_class})
-
-
-#    # Enter a parse tree produced by MapCSSParser#quoted.
-#    def enterQuoted(self, ctx:MapCSSParser.QuotedContext):
-#        pass
-
-#    # Exit a parse tree produced by MapCSSParser#quoted.
-#    def exitQuoted(self, ctx:MapCSSParser.QuotedContext):
-#        pass
-
-
-#    # Enter a parse tree produced by MapCSSParser#cssident.
-#    def enterCssident(self, ctx:MapCSSParser.CssidentContext):
-#        pass
-
-#    # Exit a parse tree produced by MapCSSParser#cssident.
-#    def exitCssident(self, ctx:MapCSSParser.CssidentContext):
-#        pass
-
-
-#    # Enter a parse tree produced by MapCSSParser#attribute_selector.
-#    def enterAttribute_selector(self, ctx:MapCSSParser.Attribute_selectorContext):
-#        pass
-
-#    # Exit a parse tree produced by MapCSSParser#attribute_selector.
-#    def exitAttribute_selector(self, ctx:MapCSSParser.Attribute_selectorContext):
-#        pass
 
 
     # Enter a parse tree produced by MapCSSParser#predicate.
@@ -228,15 +183,6 @@ class MapCSSListenerL(MapCSSListener):
         self.stack[-1]['predicate_function_param'].append(ctx.single_value() and ctx.single_value().getText() or predicate_function[0])
 
 
-#    # Enter a parse tree produced by MapCSSParser#predicate_ident.
-#    def enterPredicate_ident(self, ctx:MapCSSParser.Predicate_identContext):
-#        pass
-
-#    # Exit a parse tree produced by MapCSSParser#predicate_ident.
-#    def exitPredicate_ident(self, ctx:MapCSSParser.Predicate_identContext):
-#        pass
-
-
     # Enter a parse tree produced by MapCSSParser#predicate_primitive.
     def enterPredicate_primitive(self, ctx:MapCSSParser.Predicate_primitiveContext):
         self.stack.append({
@@ -247,24 +193,6 @@ class MapCSSListenerL(MapCSSListener):
     def exitPredicate_primitive(self, ctx:MapCSSParser.Predicate_primitiveContext):
         predicate_function = self.stack.pop()['predicate_functions']
         self.stack[-1]['predicate_primitives'].append((ctx.single_value() and ctx.single_value().getText()) or (ctx.predicate_ident() and ctx.predicate_ident().getText()) or predicate_function[0])
-
-
-    # Enter a parse tree produced by MapCSSParser#rhs_match.
-    def enterRhs_match(self, ctx:MapCSSParser.Rhs_matchContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#rhs_match.
-    def exitRhs_match(self, ctx:MapCSSParser.Rhs_matchContext):
-        pass
-
-
-    # Enter a parse tree produced by MapCSSParser#binary_operator.
-    def enterBinary_operator(self, ctx:MapCSSParser.Binary_operatorContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#binary_operator.
-    def exitBinary_operator(self, ctx:MapCSSParser.Binary_operatorContext):
-        pass
 
 
 #    # Enter a parse tree produced by MapCSSParser#class_selector.
@@ -285,33 +213,6 @@ class MapCSSListenerL(MapCSSListener):
         self.pseudo_class.append({'type': 'pseudo_class', 'not_class': not(not(ctx.OP_NOT())), 'pseudo_class': ctx.cssident().getText()})
 
 
-#    # Enter a parse tree produced by MapCSSParser#type_selector.
-#    def enterType_selector(self, ctx:MapCSSParser.Type_selectorContext):
-#        pass
-
-#    # Exit a parse tree produced by MapCSSParser#type_selector.
-#    def exitType_selector(self, ctx:MapCSSParser.Type_selectorContext):
-#        pass
-
-
-#    # Enter a parse tree produced by MapCSSParser#declaration_block.
-#    def enterDeclaration_block(self, ctx:MapCSSParser.Declaration_blockContext):
-#        pass
-
-#    # Exit a parse tree produced by MapCSSParser#declaration_block.
-#    def exitDeclaration_block(self, ctx:MapCSSParser.Declaration_blockContext):
-#        pass
-
-
-#    # Enter a parse tree produced by MapCSSParser#declarations.
-#    def enterDeclarations(self, ctx:MapCSSParser.DeclarationsContext):
-#        pass
-
-#    # Exit a parse tree produced by MapCSSParser#declarations.
-#    def exitDeclarations(self, ctx:MapCSSParser.DeclarationsContext):
-#        pass
-
-
     # Enter a parse tree produced by MapCSSParser#declaration.
     def enterDeclaration(self, ctx:MapCSSParser.DeclarationContext):
         self.params_stack = []
@@ -328,15 +229,6 @@ class MapCSSListenerL(MapCSSListener):
             'set': ctx.cssident() and ctx.cssident().getText(),
             'property': ctx.declaration_property() and ctx.declaration_property().getText(),
             'value': self.value})
-
-
-#    # Enter a parse tree produced by MapCSSParser#declaration_property.
-#    def enterDeclaration_property(self, ctx:MapCSSParser.Declaration_propertyContext):
-#        pass
-
-#    # Exit a parse tree produced by MapCSSParser#declaration_property.
-#    def exitDeclaration_property(self, ctx:MapCSSParser.Declaration_propertyContext):
-#        pass
 
 
 #    # Enter a parse tree produced by MapCSSParser#declaration_value_single.
@@ -360,111 +252,3 @@ class MapCSSListenerL(MapCSSListener):
         self.params.append({'type': 'declaration_value_function',
             'name': ctx.cssident().getText(),
             'params': params})
-
-
-#    # Enter a parse tree produced by MapCSSParser#num.
-#    def enterNum(self, ctx:MapCSSParser.NumContext):
-#        pass
-
-#    # Exit a parse tree produced by MapCSSParser#num.
-#    def exitNum(self, ctx:MapCSSParser.NumContext):
-#        pass
-
-
-#    # Enter a parse tree produced by MapCSSParser#single_value.
-#    def enterSingle_value(self, ctx:MapCSSParser.Single_valueContext):
-#        pass
-
-#    # Exit a parse tree produced by MapCSSParser#single_value.
-#    def exitSingle_value(self, ctx:MapCSSParser.Single_valueContext):
-#        pass
-
-
-    # Enter a parse tree produced by MapCSSParser#expr.
-    def enterExpr(self, ctx:MapCSSParser.ExprContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#expr.
-    def exitExpr(self, ctx:MapCSSParser.ExprContext):
-        pass
-
-
-    # Enter a parse tree produced by MapCSSParser#args.
-    def enterArgs(self, ctx:MapCSSParser.ArgsContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#args.
-    def exitArgs(self, ctx:MapCSSParser.ArgsContext):
-        pass
-
-
-    # Enter a parse tree produced by MapCSSParser#logicalExpression.
-    def enterLogicalExpression(self, ctx:MapCSSParser.LogicalExpressionContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#logicalExpression.
-    def exitLogicalExpression(self, ctx:MapCSSParser.LogicalExpressionContext):
-        pass
-
-
-    # Enter a parse tree produced by MapCSSParser#booleanAndExpression.
-    def enterBooleanAndExpression(self, ctx:MapCSSParser.BooleanAndExpressionContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#booleanAndExpression.
-    def exitBooleanAndExpression(self, ctx:MapCSSParser.BooleanAndExpressionContext):
-        pass
-
-
-    # Enter a parse tree produced by MapCSSParser#equalityExpression.
-    def enterEqualityExpression(self, ctx:MapCSSParser.EqualityExpressionContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#equalityExpression.
-    def exitEqualityExpression(self, ctx:MapCSSParser.EqualityExpressionContext):
-        pass
-
-
-    # Enter a parse tree produced by MapCSSParser#relationalExpression.
-    def enterRelationalExpression(self, ctx:MapCSSParser.RelationalExpressionContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#relationalExpression.
-    def exitRelationalExpression(self, ctx:MapCSSParser.RelationalExpressionContext):
-        pass
-
-
-    # Enter a parse tree produced by MapCSSParser#additiveExpression.
-    def enterAdditiveExpression(self, ctx:MapCSSParser.AdditiveExpressionContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#additiveExpression.
-    def exitAdditiveExpression(self, ctx:MapCSSParser.AdditiveExpressionContext):
-        pass
-
-
-    # Enter a parse tree produced by MapCSSParser#multiplicativeExpression.
-    def enterMultiplicativeExpression(self, ctx:MapCSSParser.MultiplicativeExpressionContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#multiplicativeExpression.
-    def exitMultiplicativeExpression(self, ctx:MapCSSParser.MultiplicativeExpressionContext):
-        pass
-
-
-    # Enter a parse tree produced by MapCSSParser#unaryExpression.
-    def enterUnaryExpression(self, ctx:MapCSSParser.UnaryExpressionContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#unaryExpression.
-    def exitUnaryExpression(self, ctx:MapCSSParser.UnaryExpressionContext):
-        pass
-
-
-    # Enter a parse tree produced by MapCSSParser#primaryExpression.
-    def enterPrimaryExpression(self, ctx:MapCSSParser.PrimaryExpressionContext):
-        pass
-
-    # Exit a parse tree produced by MapCSSParser#primaryExpression.
-    def exitPrimaryExpression(self, ctx:MapCSSParser.PrimaryExpressionContext):
-        pass
