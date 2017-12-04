@@ -77,7 +77,6 @@ OP_NOT: '!'; // NOTE: boolean not -> !(expr)
 SET: ('s' | 'S') ('e' | 'E') ('t' | 'T');
 ROLE: ('r' | 'R') ('o' | 'O') ('l' | 'L') ('e' | 'E');
 INDEX: ('i' | 'I') ('n' | 'N') ('d' | 'D') ('e' | 'E') ('x' | 'X');
-EVAL: ('e' | 'E') ('v' | 'V') ('a' | 'A') ('l' | 'L');
 IMPORT: '@' ('i' | 'I') ('m' | 'M') ('p' | 'P') ('o' | 'O')('r' | 'R') ('t' | 'T');
 
 
@@ -105,8 +104,8 @@ SEMICOLON: ';';
 /* -------------------- quoted strings -----------------------------------------------------------*/
 fragment EDQUOTE: '\\"';
 fragment ESQUOTE: '\\\'';
-DQUOTED_STRING: '"' (' ' | '!' | '#'..'[' | ']'..'~' | UNICODE | EDQUOTE | EBACKSLASH )* '"';
-SQUOTED_STRING: '\'' (' '..'&' | '('..'[' | ']'..'~' | UNICODE | ESQUOTE | EBACKSLASH)* '\'';
+DQUOTED_STRING: '"' (' ' | '!' | '#'..'[' | ']'..'~' | '°' | UNICODE | EDQUOTE | EBACKSLASH)* '"';
+SQUOTED_STRING: '\'' (' '..'&' | '('..'[' | ']'..'~' | '°' | UNICODE | ESQUOTE | EBACKSLASH)* '\'';
 
 POSITIVE_INT: [0-9]+;
 NEGATIVE_INT: '-' POSITIVE_INT;
@@ -124,8 +123,8 @@ fragment REGEX_ESCAPE:   '\\\\' | '\\/' | '\\(' | '\\)'
                        | '\\s' | '\\S'
                        | '\\d' | '\\D'
                        | '\\w' | '\\W';
-fragment REGEX_START:  ' '..')' | '+'..'.' |'0'..'[' | ']'..'~' | UNICODE | REGEX_ESCAPE;
-fragment REGEX_CHAR:  ' '..'.' |'0'..'[' | ']'..'~' | UNICODE | REGEX_ESCAPE;
+fragment REGEX_START:  ' '..')' | '+'..'.' |'0'..'[' | ']'..'~' | '°' | UNICODE | REGEX_ESCAPE;
+fragment REGEX_CHAR:  ' '..'.' |'0'..'[' | ']'..'~' | '°' | UNICODE | REGEX_ESCAPE;
 
 REGEXP: '/' REGEX_START REGEX_CHAR* '/';
 
@@ -158,7 +157,7 @@ rule_
 selector
     : simple_selector
     | simple_selector simple_selector
-    | simple_selector OP_GT link_selector*  simple_selector
+    | simple_selector OP_GT (link_selector | pseudo_class_selector)* simple_selector
     | simple_selector simple_selector_operator simple_selector
     ;
 
@@ -203,8 +202,9 @@ predicate
     ;
 
 predicate_simple
-    : predicate_ident  | OP_NOT predicate_ident  | predicate_ident QUESTION_MARK
-    | quoted           | OP_NOT quoted           |          quoted QUESTION_MARK
+    : OP_NOT ? predicate_ident QUESTION_MARK ?
+    | OP_NOT ? quoted          QUESTION_MARK ?
+    | OP_NOT ? rhs_match
     ;
 
 predicate_operator
@@ -268,7 +268,7 @@ declarations
     ;
 
 declaration
-    : SET cssident
+    : SET DOT ? cssident
     | declaration_property COLON declaration_value
     ;
 

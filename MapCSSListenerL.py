@@ -11,7 +11,13 @@ def to_mapcss(t):
         return ",\n".join(map(to_mapcss, t['selectors'])) + " {\n    " + "\n    ".join(map(to_mapcss, t['declarations'])) + "\n}\n"
     elif t['type'] == 'selector':
         if t['operator']:
-            return to_mapcss(t['simple_selectors'][0]) + " " + t['operator'] + "".join(map(to_mapcss, t['link_selectors'])) + " " + to_mapcss(t['simple_selectors'][1])
+            return (
+                to_mapcss(t['simple_selectors'][0]) + " " +
+                t['operator'] +
+                "".join(map(to_mapcss, t['link_selectors'])) +
+                "".join(map(to_mapcss, t['pseudo_class'])) + " " +
+                to_mapcss(t['simple_selectors'][1])
+            )
         else:
             return "".join(map(to_mapcss, t['simple_selectors']))
     elif t['type'] == 'link_selector':
@@ -80,12 +86,14 @@ class MapCSSListenerL(MapCSSListener):
     def enterSelector(self, ctx:MapCSSParser.SelectorContext):
         self.simple_selectors = []
         self.link_selectors = []
+        self.pseudo_class = []
 
     # Exit a parse tree produced by MapCSSParser#selector.
     def exitSelector(self, ctx:MapCSSParser.SelectorContext):
         self.selectors.append({'type': 'selector', 'simple_selectors': self.simple_selectors,
             'operator': (ctx.simple_selector_operator() and ctx.simple_selector_operator().getText()) or (ctx.OP_GT() and ctx.OP_GT().getText()),
-            'link_selectors': self.link_selectors})
+            'link_selectors': self.link_selectors,
+            'pseudo_class': self.pseudo_class})
 
 
     # Enter a parse tree produced by MapCSSParser#link_selector.
@@ -136,7 +144,7 @@ class MapCSSListenerL(MapCSSListener):
     # Exit a parse tree produced by MapCSSParser#predicate_simple.
     def exitPredicate_simple(self, ctx:MapCSSParser.Predicate_simpleContext):
         self.stack[-1]['predicate_simple'] = {'type': 'predicate_simple',
-            'predicate': (ctx.predicate_ident() or ctx.quoted()).getText(),
+            'predicate': (ctx.predicate_ident() or ctx.quoted() or ctx.rhs_match()).getText(),
             'not': not(not(ctx.OP_NOT())),
             'question_mark': not(not(ctx.QUESTION_MARK()))}
 
