@@ -164,15 +164,13 @@ selector
 simple_selector_operator : OP_LT | OP_INCLUDED_IN | OP_INTERSECTS;
 
 link_selector
-    : LBRACKET ROLE binary_operator predicate_primitive RBRACKET
-    | LBRACKET INDEX op=int_operator v=int_ RBRACKET
+    : LBRACKET ROLE valueOperator valueExpression RBRACKET
+    | LBRACKET INDEX numericOperator v=int_ RBRACKET
     ;
 
 layer_id_selector
     : COLON COLON k=cssident
     ;
-
-int_operator : OP_EQ | OP_NEQ | OP_LT | OP_LE | OP_GT | OP_GE;
 
 simple_selector
     : type_selector (class_selector | attribute_selector | pseudo_class_selector)* layer_id_selector?
@@ -197,49 +195,17 @@ attribute_selector
 
 predicate
     : predicate_simple
-    | predicate_operator
-    | predicate_function
+    | booleanExpression
     ;
 
 predicate_simple
     : OP_NOT ? predicate_ident QUESTION_MARK ?
     | OP_NOT ? quoted          QUESTION_MARK ?
-    | OP_NOT ? rhs_match
-    ;
-
-predicate_operator
-    : predicate_primitive binary_operator predicate_primitive
-    | predicate_primitive (OP_MATCH | OP_NOT_MATCH) rhs_match
-    ;
-
-predicate_function
-    : cssident PAR_OPEN (predicate_function_param (COMMA predicate_function_param)*)? PAR_CLOSE
-    ;
-
-predicate_function_param
-    : single_value
-    | predicate_function
+    | OP_NOT ? regexExpression
     ;
 
 predicate_ident
     : osmtag
-    ;
-
-predicate_primitive
-    : single_value
-    | predicate_ident
-    | predicate_function
-    ;
-
-rhs_match
-    : quoted
-    | r=REGEXP
-    ;
-
-binary_operator
-    : OP_EQ | OP_NEQ | OP_LT | OP_GT | OP_LE
-    | OP_GE | OP_STARTS_WITH | OP_ENDS_WITH | OP_SUBSTRING
-    | OP_CONTAINS
     ;
 
 class_selector
@@ -314,73 +280,53 @@ single_value
     ;
 
 /* ------------------------------------------------------------------------------------------ */
-/* eval expressions                                                                           */
+/* Expressions                                                                                */
 /* ------------------------------------------------------------------------------------------ */
-expr
-    : logicalExpression
+booleanOperator
+    : OP_OR | OP_AND | OP_EQ | OP_NEQ
     ;
 
-args
-    : (expr (COMMA expr)*)?
+numericOperator
+    : OP_EQ | OP_NEQ | OP_LT | OP_LE | OP_GT | OP_GE
     ;
 
-logicalExpression
-    : booleanAndExpression (
-            OP_OR logicalExpression
-          |
-      )
+valueOperator
+    : numericOperator
+    | OP_STARTS_WITH | OP_ENDS_WITH
+    | OP_SUBSTRING | OP_CONTAINS
     ;
 
-booleanAndExpression
-    :    equalityExpression (
-           |
-         )
+regexOperator
+    : OP_MATCH | OP_NOT_MATCH
     ;
 
-equalityExpression
-    : relationalExpression (
-            OP_EQ  relationalExpression
-          | OP_NEQ relationalExpression
-          |
-      )
+booleanExpression
+    : op=PAR_OPEN booleanExpression PAR_CLOSE
+    | op=OP_NOT booleanExpression
+    | booleanExpression booleanOperator booleanExpression
+    | valueExpression valueOperator valueExpression
+    | valueExpression regexOperator regexExpression
+    | functionExpression
     ;
 
-relationalExpression
-    : additiveExpression (
-            OP_LT additiveExpression
-          | OP_LE additiveExpression
-          | OP_GT additiveExpression
-          | OP_GE additiveExpression
-          |
-      )
-    ;
-
-additiveExpression
-    : multiplicativeExpression (
-            OP_PLUS  additiveExpression
-          | OP_MINUS additiveExpression
-          |
-      )
-    ;
-
-multiplicativeExpression
-    : unaryExpression (
-          (OP_MUL multiplicativeExpression)
-        | (OP_DIV multiplicativeExpression)
-        | (OP_MOD multiplicativeExpression)
-        |
-      )
-    ;
-
-unaryExpression
-    : OP_NOT primaryExpression
+valueExpression
+    : op=PAR_OPEN valueExpression PAR_CLOSE
+    | valueExpression op=(OP_PLUS | OP_MINUS | OP_MUL | OP_DIV | OP_MOD) valueExpression
     | primaryExpression
+    | functionExpression
+    ;
+
+regexExpression
+    : quoted
+    | REGEXP
+    ;
+
+functionExpression
+    : f=cssident PAR_OPEN (valueExpression (COMMA valueExpression)*)? PAR_CLOSE
     ;
 
 primaryExpression
-    : PAR_OPEN expr PAR_CLOSE
-    | f=cssident PAR_OPEN args PAR_CLOSE
-    | v=POSITIVE_FLOAT
+    : v=POSITIVE_FLOAT
     | v=POSITIVE_INT
     | v=NEGATIVE_FLOAT
     | v=NEGATIVE_INT
