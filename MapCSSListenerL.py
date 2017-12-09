@@ -35,7 +35,7 @@ def to_mapcss(t):
     elif t['type'] == 'class_selector':
         return ("!" if t['not'] else "") + "." + t['class']
     elif t['type'] == 'predicate_simple':
-        return ("!" if t['not'] else "") + t['predicate'] + ("?" if t['question_mark'] else "")
+        return ("!" if t['not'] else "") + to_mapcss(t['predicate']) + ("?" if t['question_mark'] else "")
     elif t['type'] == 'pseudo_class':
         return (
             ("!" if t['not_class'] else "") +
@@ -46,7 +46,7 @@ def to_mapcss(t):
             return "set " + t['set'] + ";"
         else:
             return to_mapcss(t['property']) + ": " + to_mapcss(t['value']) + ";"
-    elif t['type'] == 'declaration_value_single':
+    elif t['type'] == 'single_value':
         return to_mapcss(t['value'])
     elif t['type'] == 'declaration_value_function':
         return t['name'] + "(" + ", ".join(map(to_mapcss, t['params'])) + ")"
@@ -69,7 +69,7 @@ def to_mapcss(t):
     elif t['type'] == 'functionExpression':
         return t['name'] + "(" + ", ".join(map(to_mapcss, t['params'])) + ")"
     elif t['type'] == 'primaryExpression':
-        return to_mapcss(t['value'])
+        return ("*" if t['derefered'] else "") + to_mapcss(t['value'])
     else:
         return "<UNKNOW TYPE {0}>".format(t['type'])
 
@@ -156,14 +156,18 @@ class MapCSSListenerL(MapCSSListener):
         self.predicates.append(predicate['predicate_simple'] or predicate['booleanExpressions'][0])
 
 
-#    # Enter a parse tree produced by MapCSSParser#predicate_simple.
-#    def enterPredicate_simple(self, ctx:MapCSSParser.Predicate_simpleContext):
-#        pass
+    # Enter a parse tree produced by MapCSSParser#predicate_simple.
+    def enterPredicate_simple(self, ctx:MapCSSParser.Predicate_simpleContext):
+        self.stack.append({
+            'quoted': None,
+            'regexExpression': None
+        })
 
     # Exit a parse tree produced by MapCSSParser#predicate_simple.
     def exitPredicate_simple(self, ctx:MapCSSParser.Predicate_simpleContext):
+        v = self.stack.pop()
         self.stack[-1]['predicate_simple'] = {'type': 'predicate_simple',
-            'predicate': (ctx.predicate_ident() or ctx.quoted() or ctx.regexExpression()).getText(),
+            'predicate': (ctx.predicate_ident() and ctx.predicate_ident().getText()) or v['quoted'] or v['regexExpression'],
             'not': not(not(ctx.OP_NOT())),
             'question_mark': not(not(ctx.QUESTION_MARK()))}
 
@@ -204,13 +208,16 @@ class MapCSSListenerL(MapCSSListener):
             'value': self.value})
 
 
-#    # Enter a parse tree produced by MapCSSParser#declaration_value_single.
-#    def enterDeclaration_value_single(self, ctx:MapCSSParser.Declaration_value_singleContext):
-#        pass
+    # Enter a parse tree produced by MapCSSParser#single_value.
+    def enterSingle_value(self, ctx:MapCSSParser.Single_valueContext):
+        self.stack.append({
+            'quoted': None
+        })
 
-    # Exit a parse tree produced by MapCSSParser#declaration_value_single.
-    def exitDeclaration_value_single(self, ctx:MapCSSParser.Declaration_value_singleContext):
-        self.params.append({'type': 'declaration_value_single', 'value': ctx.single_value().getText()})
+    # Exit a parse tree produced by MapCSSParser#single_value.
+    def exitSingle_value(self, ctx:MapCSSParser.Single_valueContext):
+        v = self.stack.pop()
+        self.params.append({'type': 'single_value', 'value': ctx.getText()})
 
 
     # Enter a parse tree produced by MapCSSParser#declaration_value_function.
@@ -269,6 +276,27 @@ class MapCSSListenerL(MapCSSListener):
         })
 
 
+#    # Enter a parse tree produced by MapCSSParser#quoted.
+#    def enterQuoted(self, ctx:MapCSSParser.QuotedContext):
+#        pass
+
+    # Exit a parse tree produced by MapCSSParser#quoted.
+    def exitQuoted(self, ctx:MapCSSParser.QuotedContext):
+        self.stack[-1]['quoted'] = ctx.v.text
+
+
+    # Enter a parse tree produced by MapCSSParser#regexExpression.
+    def enterRegexExpression(self, ctx:MapCSSParser.RegexExpressionContext):
+        self.stack.append({
+            'quoted': None
+        })
+
+    # Exit a parse tree produced by MapCSSParser#regexExpression.
+    def exitRegexExpression(self, ctx:MapCSSParser.RegexExpressionContext):
+        v = self.stack.pop()
+        self.stack[-1]['regexExpression'] = ctx.REGEXP() and ctx.REGEXP().getText() or v['quoted']['value']
+
+
     # Enter a parse tree produced by MapCSSParser#functionExpression.
     def enterFunctionExpression(self, ctx:MapCSSParser.FunctionExpressionContext):
         self.stack.append({
@@ -285,13 +313,18 @@ class MapCSSListenerL(MapCSSListener):
         }
 
 
-#    # Enter a parse tree produced by MapCSSParser#primaryExpression.
-#    def enterPrimaryExpression(self, ctx:MapCSSParser.PrimaryExpressionContext):
-#        pass
+    # Enter a parse tree produced by MapCSSParser#primaryExpression.
+    def enterPrimaryExpression(self, ctx:MapCSSParser.PrimaryExpressionContext):
+        self.stack.append({
+            'quoted': None,
+            'regexExpression': None
+        })
 
     # Exit a parse tree produced by MapCSSParser#primaryExpression.
     def exitPrimaryExpression(self, ctx:MapCSSParser.PrimaryExpressionContext):
+        v = self.stack.pop()
         self.stack[-1]['primaryExpression'] = {
             'type': 'primaryExpression',
-            'value': ctx.getText()
+            'derefered': not(not(ctx.OP_MUL())),
+            'value': (ctx.v and ctx.v.text) or (ctx.osmtag() and ctx.osmtag().getText()) or (v['quoted'] or v['regexExpression'])
         }

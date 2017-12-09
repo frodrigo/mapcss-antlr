@@ -177,8 +177,8 @@ simple_selector
     ;
 
 quoted
-    : DQUOTED_STRING
-    | SQUOTED_STRING
+    : v=DQUOTED_STRING
+    | v=SQUOTED_STRING
     ;
 
 cssident
@@ -243,13 +243,9 @@ declaration_property
     ;
 
 declaration_value
-    : declaration_value_single
+    : single_value
 /*    | EVAL  PAR_OPEN expr PAR_CLOSE*/
     | declaration_value_function
-    ;
-
-declaration_value_single
-    : single_value
     ;
 
 declaration_value_function
@@ -330,6 +326,7 @@ primaryExpression
     | v=POSITIVE_INT
     | v=NEGATIVE_FLOAT
     | v=NEGATIVE_INT
-    | quoted
-    | osmtag
+    | OP_MUL ? quoted
+    | OP_MUL ? osmtag
+    | OP_MUL regexExpression
     ;
