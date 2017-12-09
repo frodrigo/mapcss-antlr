@@ -92,7 +92,6 @@ fragment NMCHAR: 'a'..'z' | 'A'..'Z' | '_' | '-' | NONASCII;
 /* helpers */
 NCOMPONENT: (CHAR | '_') (CHAR | DIGIT | '_' | '-')*;
 
-
 LBRACKET: '[';
 RBRACKET: ']';
 LBRACE: '{';
@@ -117,14 +116,9 @@ NEGATIVE_FLOAT: '-' POSITIVE_FLOAT;
 /* ----------------------------------------------------------------------------------------------- */
 /* Regular expressions  and the '/' operator                                                       */
 /* ----------------------------------------------------------------------------------------------- */
-fragment REGEX_ESCAPE:   '\\\\' | '\\/' | '\\(' | '\\)'
-                       | '\\|' | '\\$' | '\\*' | '\\.' | '\\^' | '\\?' | '\\+' | '\\-'
-                       | '\\n' | '\\r' | '\\t'
-                       | '\\s' | '\\S'
-                       | '\\d' | '\\D'
-                       | '\\w' | '\\W';
-fragment REGEX_START:  ' '..')' | '+'..'.' |'0'..'[' | ']'..'~' | '°' | UNICODE | REGEX_ESCAPE;
-fragment REGEX_CHAR:  ' '..'.' |'0'..'[' | ']'..'~' | '°' | UNICODE | REGEX_ESCAPE;
+fragment REGEX_ESCAPE:   '\\/';
+fragment REGEX_START: REGEX_ESCAPE | ' '..')' | '+'..'.' |'0'..'[' | ']'..'~' | '°' | '\\' | UNICODE;
+fragment REGEX_CHAR:  REGEX_ESCAPE | ' '..'.' |'0'..'[' | ']'..'~' | '°' | '\\' | UNICODE;
 
 REGEXP: '/' REGEX_START REGEX_CHAR* '/';
 
