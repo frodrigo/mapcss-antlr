@@ -43,7 +43,8 @@ tokens {
 }
 
 fragment EBACKSLASH: '\\\\';
-fragment UNICODE: '\u0080'..'\uFFFF';
+fragment UNICODE: '\u0080'..'\uFFFD';  /* FIXME, Should be '\u0080'..'\uFFFE', but bug in antlr4 4.7, waiting for next release. */
+
 
 COMMA: ',';
 QUESTION_MARK: '?';
