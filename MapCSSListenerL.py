@@ -69,7 +69,7 @@ def to_mapcss(t):
     elif t['type'] == 'functionExpression':
         return t['name'] + "(" + ", ".join(map(to_mapcss, t['params'])) + ")"
     elif t['type'] == 'primaryExpression':
-        return ("*" if t['derefered'] else "") + to_mapcss(t['value'])
+        return ("*" if t['derefered'] else "") + str((t['number']) or t['value'])
     else:
         return "<UNKNOW TYPE {0}>".format(t['type'])
 
@@ -239,7 +239,8 @@ class MapCSSListenerL(MapCSSListener):
         self.stack.append({
             'booleanExpressions': [],
             'valueExpressions': [],
-            'functionExpression': None
+            'regexExpression': None,
+            'functionExpression': None,
         })
 
     # Exit a parse tree produced by MapCSSParser#booleanExpression.
@@ -251,7 +252,7 @@ class MapCSSListenerL(MapCSSListener):
                 (ctx.op and ctx.op.text) or
                 (ctx.booleanOperator() or ctx.valueOperator() or ctx.regexOperator()).getText(),
             'operands': v['booleanExpressions'] + v['valueExpressions'] + (
-                (ctx.regexExpression() and [ctx.regexExpression().getText()]) or 
+                [v['regexExpression']] or
                 [v['functionExpression']] or
                 []
             )
@@ -294,7 +295,7 @@ class MapCSSListenerL(MapCSSListener):
     # Exit a parse tree produced by MapCSSParser#regexExpression.
     def exitRegexExpression(self, ctx:MapCSSParser.RegexExpressionContext):
         v = self.stack.pop()
-        self.stack[-1]['regexExpression'] = ctx.REGEXP() and ctx.REGEXP().getText() or v['quoted']['value']
+        self.stack[-1]['regexExpression'] = ctx.REGEXP() and ctx.REGEXP().getText()[1:-1] or v['quoted']['value']
 
 
     # Enter a parse tree produced by MapCSSParser#functionExpression.
@@ -326,5 +327,6 @@ class MapCSSListenerL(MapCSSListener):
         self.stack[-1]['primaryExpression'] = {
             'type': 'primaryExpression',
             'derefered': not(not(ctx.OP_MUL())),
-            'value': (ctx.v and ctx.v.text) or (ctx.osmtag() and ctx.osmtag().getText()) or (v['quoted'] or v['regexExpression'])
+            'number': ctx.v and ctx.v.text,
+            'string': (ctx.osmtag() and ctx.osmtag().getText()) or (v['quoted'] or v['regexExpression'])
         }
