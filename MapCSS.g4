@@ -172,8 +172,8 @@ simple_selector
     ;
 
 quoted
-    : v=DQUOTED_STRING
-    | v=SQUOTED_STRING
+    : DQUOTED_STRING
+    | SQUOTED_STRING
     ;
 
 cssident
@@ -194,13 +194,8 @@ predicate
     ;
 
 predicate_simple
-    : OP_NOT ? predicate_ident QUESTION_MARK ?
-    | OP_NOT ? quoted          QUESTION_MARK ?
+    : OP_NOT ? (osmtag | quoted) QUESTION_MARK ?
     | OP_NOT ? regexExpression
-    ;
-
-predicate_ident
-    : osmtag
     ;
 
 class_selector

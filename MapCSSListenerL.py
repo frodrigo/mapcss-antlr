@@ -66,10 +66,16 @@ def to_mapcss(t):
             return to_mapcss(t['operands'][0])
         else:
             return to_mapcss(t['operands'][0]) + t['operator'] + to_mapcss(t['operands'][1])
+    elif t['type'] == 'quoted':
+        return t['value']
+    elif t['type'] == 'osmtag':
+        return t['value']
+    elif t['type'] == 'regexExpression':
+        return "/" + to_mapcss(t['value']) + "/"
     elif t['type'] == 'functionExpression':
         return t['name'] + "(" + ", ".join(map(to_mapcss, t['params'])) + ")"
     elif t['type'] == 'primaryExpression':
-        return ("*" if t['derefered'] else "") + str((t['number']) or t['value'])
+        return ("*" if t['derefered'] else "") + to_mapcss(t['value'])
     else:
         return "<UNKNOW TYPE {0}>".format(t['type'])
 
@@ -160,6 +166,7 @@ class MapCSSListenerL(MapCSSListener):
     def enterPredicate_simple(self, ctx:MapCSSParser.Predicate_simpleContext):
         self.stack.append({
             'quoted': None,
+            'osmtag': None,
             'regexExpression': None
         })
 
@@ -167,7 +174,7 @@ class MapCSSListenerL(MapCSSListener):
     def exitPredicate_simple(self, ctx:MapCSSParser.Predicate_simpleContext):
         v = self.stack.pop()
         self.stack[-1]['predicate_simple'] = {'type': 'predicate_simple',
-            'predicate': (ctx.predicate_ident() and ctx.predicate_ident().getText()) or v['quoted'] or v['regexExpression'],
+            'predicate': v['osmtag'] or v['quoted'] or v['regexExpression'],
             'not': not(not(ctx.OP_NOT())),
             'question_mark': not(not(ctx.QUESTION_MARK()))}
 
@@ -211,13 +218,14 @@ class MapCSSListenerL(MapCSSListener):
     # Enter a parse tree produced by MapCSSParser#single_value.
     def enterSingle_value(self, ctx:MapCSSParser.Single_valueContext):
         self.stack.append({
-            'quoted': None
+            'quoted': None,
+            'osmtag': None
         })
 
     # Exit a parse tree produced by MapCSSParser#single_value.
     def exitSingle_value(self, ctx:MapCSSParser.Single_valueContext):
         v = self.stack.pop()
-        self.params.append({'type': 'single_value', 'value': ctx.getText()})
+        self.params.append({'type': 'single_value', 'value': v['quoted'] or v['osmtag']})
 
 
     # Enter a parse tree produced by MapCSSParser#declaration_value_function.
@@ -283,7 +291,22 @@ class MapCSSListenerL(MapCSSListener):
 
     # Exit a parse tree produced by MapCSSParser#quoted.
     def exitQuoted(self, ctx:MapCSSParser.QuotedContext):
-        self.stack[-1]['quoted'] = ctx.v.text
+        self.stack[-1]['quoted'] = {
+            'type': 'quoted',
+            'value': ctx.getText()
+        }
+
+
+#    # Enter a parse tree produced by MapCSSParser#osmtag.
+#    def enterOsmtag(self, ctx:MapCSSParser.OsmtagContext):
+#        pass
+
+    # Exit a parse tree produced by MapCSSParser#osmtag.
+    def exitOsmtag(self, ctx:MapCSSParser.OsmtagContext):
+        self.stack[-1]['osmtag'] = {
+            'type': 'osmtag',
+            'value': ctx.getText()
+        }
 
 
     # Enter a parse tree produced by MapCSSParser#regexExpression.
@@ -295,7 +318,10 @@ class MapCSSListenerL(MapCSSListener):
     # Exit a parse tree produced by MapCSSParser#regexExpression.
     def exitRegexExpression(self, ctx:MapCSSParser.RegexExpressionContext):
         v = self.stack.pop()
-        self.stack[-1]['regexExpression'] = ctx.REGEXP() and ctx.REGEXP().getText()[1:-1] or v['quoted']['value']
+        self.stack[-1]['regexExpression'] = {
+            'type': 'regexExpression',
+            'value': ctx.REGEXP() and ctx.REGEXP().getText()[1:-1] or v['quoted']
+        }
 
 
     # Enter a parse tree produced by MapCSSParser#functionExpression.
@@ -318,6 +344,7 @@ class MapCSSListenerL(MapCSSListener):
     def enterPrimaryExpression(self, ctx:MapCSSParser.PrimaryExpressionContext):
         self.stack.append({
             'quoted': None,
+            'osmtag': None,
             'regexExpression': None
         })
 
@@ -327,6 +354,5 @@ class MapCSSListenerL(MapCSSListener):
         self.stack[-1]['primaryExpression'] = {
             'type': 'primaryExpression',
             'derefered': not(not(ctx.OP_MUL())),
-            'number': ctx.v and ctx.v.text,
-            'string': (ctx.osmtag() and ctx.osmtag().getText()) or (v['quoted'] or v['regexExpression'])
+            'value': (ctx.v and ctx.v.text) or v['osmtag'] or v['quoted'] or v['regexExpression']
         }
