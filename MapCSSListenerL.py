@@ -112,7 +112,10 @@ class MapCSSListenerL(MapCSSListener):
 
     # Exit a parse tree produced by MapCSSParser#selector.
     def exitSelector(self, ctx:MapCSSParser.SelectorContext):
-        self.selectors.append({'type': 'selector', 'simple_selectors': self.simple_selectors,
+        self.selectors.append({
+            'type': 'selector',
+            'text': ctx.getText(),
+            'simple_selectors': self.simple_selectors,
             'operator': (ctx.simple_selector_operator() and ctx.simple_selector_operator().getText()) or (ctx.OP_GT() and ctx.OP_GT().getText()),
             'link_selectors': self.link_selectors,
             'pseudo_class': self.pseudo_class})
@@ -209,7 +212,9 @@ class MapCSSListenerL(MapCSSListener):
         if len(self.params) > 0: # Case of declaration_value_function
             self.value = self.params[0]
 
-        self.declarations.append({'type': 'declaration',
+        self.declarations.append({
+            'type': 'declaration',
+            'text': ctx.getText(),
             'set': ctx.cssident() and ctx.cssident().getText(),
             'property': ctx.declaration_property() and ctx.declaration_property().getText(),
             'value': self.value})
@@ -225,7 +230,7 @@ class MapCSSListenerL(MapCSSListener):
     # Exit a parse tree produced by MapCSSParser#single_value.
     def exitSingle_value(self, ctx:MapCSSParser.Single_valueContext):
         v = self.stack.pop()
-        self.params.append({'type': 'single_value', 'value': v['quoted'] or v['osmtag']})
+        self.params.append({'type': 'single_value', 'value': (ctx.v and ctx.v.text) or v['quoted'] or v['osmtag']})
 
 
     # Enter a parse tree produced by MapCSSParser#declaration_value_function.
@@ -260,8 +265,8 @@ class MapCSSListenerL(MapCSSListener):
                 (ctx.op and ctx.op.text) or
                 (ctx.booleanOperator() or ctx.valueOperator() or ctx.regexOperator()).getText(),
             'operands': v['booleanExpressions'] + v['valueExpressions'] + (
-                [v['regexExpression']] or
-                [v['functionExpression']] or
+                (v['regexExpression'] and [v['regexExpression']]) or
+                (v['functionExpression'] and [v['functionExpression']]) or
                 []
             )
         })
