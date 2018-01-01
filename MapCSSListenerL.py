@@ -28,6 +28,7 @@ def to_mapcss(t):
     elif t['type'] == 'simple_selector':
         return (
             to_mapcss(t['type_selector']) +
+            to_mapcss(t['zoom_selector']) +
             "".join(map(to_mapcss, t['class_selectors'])) +
             "".join(map(lambda a: "[" + to_mapcss(a) + "]", t['predicates'])) +
             "".join(map(to_mapcss, t['pseudo_class']))
@@ -66,6 +67,8 @@ def to_mapcss(t):
             return to_mapcss(t['operands'][0])
         else:
             return to_mapcss(t['operands'][0]) + t['operator'] + to_mapcss(t['operands'][1])
+    elif t['type'] == 'zoom_selector':
+        return to_mapcss(t['value'])
     elif t['type'] == 'quoted':
         return t['value']
     elif t['type'] == 'osmtag':
@@ -138,15 +141,18 @@ class MapCSSListenerL(MapCSSListener):
 
     # Enter a parse tree produced by MapCSSParser#simple_selector.
     def enterSimple_selector(self, ctx:MapCSSParser.Simple_selectorContext):
+        self.zoom_selector = None
         self.class_selectors = []
         self.predicates = []
         self.predicates_function_base = None
         self.pseudo_class = []
+        self.stack = []
 
     # Exit a parse tree produced by MapCSSParser#simple_selector.
     def exitSimple_selector(self, ctx:MapCSSParser.Simple_selectorContext):
         self.simple_selectors.append({'type': 'simple_selector',
             'type_selector': ctx.type_selector().getText(),
+            'zoom_selector': self.zoom_selector,
             'class_selectors': self.class_selectors,
             'predicates': self.predicates,
             'pseudo_class': self.pseudo_class})
@@ -154,10 +160,10 @@ class MapCSSListenerL(MapCSSListener):
 
     # Enter a parse tree produced by MapCSSParser#predicate.
     def enterPredicate(self, ctx:MapCSSParser.PredicateContext):
-        self.stack = [{
+        self.stack.append({
             'predicate_simple': None,
             'booleanExpressions': []
-        }]
+        })
 
     # Exit a parse tree produced by MapCSSParser#predicate.
     def exitPredicate(self, ctx:MapCSSParser.PredicateContext):
@@ -288,6 +294,18 @@ class MapCSSListenerL(MapCSSListener):
             'operator': ctx.op and ctx.op.text,
             'operands': (len(v['valueExpressions']) > 0 and v['valueExpressions']) or [v['primaryExpression'] or v['functionExpression']]
         })
+
+
+#    # Enter a parse tree produced by MapCSSParser#zoom_selector.
+#    def enterZoom_selector(self, ctx:MapCSSParser.Zoom_selectorContext):
+#        pass
+
+    # Exit a parse tree produced by MapCSSParser#zoom_selector.
+    def exitZoom_selector(self, ctx:MapCSSParser.Zoom_selectorContext):
+        self.zoom_selector = {
+            'type': 'zoom_selector',
+            'value': ctx.getText()
+        }
 
 
 #    # Enter a parse tree produced by MapCSSParser#quoted.

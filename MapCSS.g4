@@ -113,6 +113,10 @@ NEGATIVE_INT: '-' POSITIVE_INT;
 POSITIVE_FLOAT: [0-9]+ | [0-9]* '.' [0-9]+;
 NEGATIVE_FLOAT: '-' POSITIVE_FLOAT;
 
+/* ----------------------------------------------------------------------------------------------- */
+/* Zoom range                                                                                      */
+/* ----------------------------------------------------------------------------------------------- */
+RANGE: '|z' ('-' DIGIT+ | DIGIT+ ('-' (DIGIT+)?)? );
 
 /* ----------------------------------------------------------------------------------------------- */
 /* Regular expressions  and the '/' operator                                                       */
@@ -168,7 +172,11 @@ layer_id_selector
     ;
 
 simple_selector
-    : type_selector (class_selector | attribute_selector | pseudo_class_selector)* layer_id_selector?
+    : type_selector (zoom_selector | class_selector | attribute_selector | pseudo_class_selector)* layer_id_selector?
+    ;
+
+zoom_selector
+    : RANGE
     ;
 
 quoted
